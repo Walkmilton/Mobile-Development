@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Coursework</string>
+    <string name="fridge_button">Fridge</string>
+    <string name="recipe_button">Recipies</string>
+    <string name="list_button">Shopping List</string>
+    <string name="main_title">Fridge App</string>
 </resources>
