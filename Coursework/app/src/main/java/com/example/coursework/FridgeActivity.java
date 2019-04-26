@@ -1,6 +1,7 @@
 package com.example.coursework;
 
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,6 +18,8 @@ import java.util.List;
 public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewAdapter.ItemClickListener {
 
 
+
+
     MyRecyclerViewAdapter adapter;
     List<String> fridgeArray;
     private String fridge_text = "";
@@ -28,8 +31,10 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
         setContentView(R.layout.activity_fridge);
 
 
-    // data to populate the RecyclerView with
         fridgeArray = new ArrayList<>();
+
+
+
         fridgeArray.add("Chicken");
         fridgeArray.add("Milk");
         fridgeArray.add("Eggs");
@@ -66,6 +71,7 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
                 count = adapter.getItemCount();
                 fridgeArray.add(fridge_text);
                 adapter.notifyItemInserted(count + 1);
+
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -107,4 +113,5 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
 
         //Toast.makeText(this, "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
+
 }
