@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -19,32 +20,41 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
 
 
 
-
+    DatabaseHelper itemDB;
     MyRecyclerViewAdapter adapter;
-    List<String> fridgeArray;
+    List<String> fridgeItemArray;
+    List<String> fridgeDateArray;
     private String fridge_text = "";
+    private String fridge_date = "";
     int count = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fridge);
+        itemDB = new DatabaseHelper(this);
+        fridgeItemArray = new ArrayList<>();
+        fridgeDateArray = new ArrayList<>();
 
+        Cursor res = itemDB.getAllData();
+            if (res.getCount() == 0) {
+                AlertDialog.Builder error = new AlertDialog.Builder(this);
+                error.setCancelable(true);
+                error.setTitle("Alert");
+                error.setMessage("The Database is empty");
 
-        fridgeArray = new ArrayList<>();
-
-
-
-        fridgeArray.add("Chicken");
-        fridgeArray.add("Milk");
-        fridgeArray.add("Eggs");
-        fridgeArray.add("Yogurt");
-        fridgeArray.add("Cheese");
+                return;
+            }
+            while (res.moveToNext()) {
+                fridgeItemArray.add(res.getString(0));
+                fridgeDateArray.add(res.getString(1));
+            }
 
     // set up the RecyclerView
     RecyclerView recyclerView = findViewById(R.id.fridgeItemList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new MyRecyclerViewAdapter(this, fridgeArray);
+        adapter = new MyRecyclerViewAdapter(this, fridgeItemArray, fridgeDateArray);
         adapter.setClickListener(this);
         recyclerView.setAdapter(adapter);
 }
@@ -53,35 +63,62 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
 
 
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("What are you putting in the Fridge?");
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
-        // Set up the input
-        final EditText input = new EditText(this);
+        LinearLayout lila1= new LinearLayout(this);
+        lila1.setOrientation(LinearLayout.VERTICAL); //1 is for vertical orientation
+
+        final EditText input1 = new EditText(this);
+        final EditText input2 = new EditText(this);
+
+        lila1.addView(input1);
+        lila1.addView(input2);
+        alert.setView(lila1);
+
+        alert.setTitle("Enter the item then the expiry date");
+
+
 
         // Specify the type of input expected
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
+        input1.setInputType(InputType.TYPE_CLASS_TEXT);
+        input2.setInputType(InputType.TYPE_CLASS_TEXT);
+
 
         // Set up the buttons
-        builder.setPositiveButton("Enter", new DialogInterface.OnClickListener() {
+        alert.setPositiveButton("Enter", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                fridge_text = input.getText().toString();
+
+                fridge_text = input1.getText().toString().trim();
+                fridge_date = input2.getText().toString().trim();
+
+
                 count = adapter.getItemCount();
-                fridgeArray.add(fridge_text);
+
+                boolean isInserted =  itemDB.insertData(fridge_text, fridge_date);
+
+                if (isInserted)
+                {
+                    Toast.makeText(FridgeActivity.this, "Data added", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(FridgeActivity.this, "Data not added", Toast.LENGTH_LONG).show();
+                }
+
+                fridgeItemArray.add(fridge_text);
+                fridgeDateArray.add(fridge_date);
+
                 adapter.notifyItemInserted(count + 1);
 
             }
         });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
             }
         });
 
-        builder.show();
+        alert.show();
 
 
     }
@@ -98,7 +135,19 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                fridgeArray.remove(position);
+
+                String deletee = adapter.getItem(position);
+
+               Integer deleteRow = itemDB.deleteData(deletee);
+               if (deleteRow > 0) {
+                   Toast.makeText(FridgeActivity.this,  deletee + " deleted", Toast.LENGTH_LONG).show();
+               } else {
+                   Toast.makeText(FridgeActivity.this, "Data not deleted", Toast.LENGTH_LONG).show();
+               }
+
+
+                fridgeItemArray.remove(position);
+                fridgeDateArray.remove(position);
                 adapter.notifyItemRemoved(position);
             }
         });
@@ -113,5 +162,5 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
 
         //Toast.makeText(this, "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
-
+    
 }

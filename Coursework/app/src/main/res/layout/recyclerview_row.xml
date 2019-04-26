@@ -8,8 +8,15 @@
 
     <TextView
         android:id="@+id/fridgeItem"
-        android:layout_width="wrap_content"
+        android:layout_width="192dp"
         android:layout_height="wrap_content"
-        android:textSize="20sp"/>
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/fridgeItemDate"
+        android:layout_width="204dp"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/fridgeItem"
+        android:textSize="20sp" />
 
 </LinearLayout>

@@ -11,14 +11,16 @@ import java.util.List;
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
 
-    private List<String> mData;
+    private List<String> mItem;
+    private List<String> mDate;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    MyRecyclerViewAdapter(Context context, List<String> data) {
+    MyRecyclerViewAdapter(Context context, List<String> item, List<String> date) {
         this.mInflater = LayoutInflater.from(context);
-        this.mData = data;
+        this.mItem = item;
+        this.mDate = date;
     }
 
     // inflates the row layout from xml when needed
@@ -31,24 +33,28 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String item = mData.get(position);
-        holder.myTextView.setText(item);
+        String item = mItem.get(position);
+        String date = mDate.get(position);
+        holder.myTextView1.setText(item);
+        holder.myTextView2.setText(date);
     }
 
     // total number of rows
     @Override
     public int getItemCount() {
-        return mData.size();
+        return mItem.size();
     }
 
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView myTextView;
+        TextView myTextView1;
+        TextView myTextView2;
 
         ViewHolder(View itemView) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.fridgeItem);
+            myTextView1 = itemView.findViewById(R.id.fridgeItem);
+            myTextView2 = itemView.findViewById(R.id.fridgeItemDate);
             itemView.setOnClickListener(this);
         }
 
@@ -60,7 +66,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     // convenience method for getting data at click position
     String getItem(int id) {
-        return mData.get(id);
+        return mItem.get(id);
     }
 
     // allows clicks events to be caught
