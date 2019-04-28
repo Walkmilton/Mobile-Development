@@ -1,7 +1,20 @@
 package com.example.coursework;
 
+import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.DatePickerDialog;
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
+import android.os.Build;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.NotificationCompat;
+import android.app.NotificationManager;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,33 +22,51 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.view.View;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
-public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewAdapter.ItemClickListener {
+public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewAdapter.ItemClickListener, DatePickerDialog.OnDateSetListener {
 
-
+    private NotificationManagerCompat notificationManager;
 
     DatabaseHelper itemDB;
+    DatabaseHelper_list listDB;
     MyRecyclerViewAdapter adapter;
     List<String> fridgeItemArray;
     List<String> fridgeDateArray;
-    private String fridge_text = "";
-    private String fridge_date = "";
+    private EditText insert_item_name;
+
+    String fridge_text;
+
+    Calendar calendar = Calendar.getInstance();
+    String fridge_date;
+
+
     int count = 0;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Setting Up Notifications
+        notificationManager = NotificationManagerCompat.from(this);
+
+
+        //Setting up LAyout and data structures
         setContentView(R.layout.activity_fridge);
         itemDB = new DatabaseHelper(this);
+        listDB = new DatabaseHelper_list(this);
         fridgeItemArray = new ArrayList<>();
         fridgeDateArray = new ArrayList<>();
+        insert_item_name = findViewById(R.id.insert_item_name);
 
         Cursor res = itemDB.getAllData();
             if (res.getCount() == 0) {
@@ -53,94 +84,97 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
 
     // set up the RecyclerView
     RecyclerView recyclerView = findViewById(R.id.fridgeItemList);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new MyRecyclerViewAdapter(this, fridgeItemArray, fridgeDateArray);
         adapter.setClickListener(this);
         recyclerView.setAdapter(adapter);
 }
 
+
+    @Override
+    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.YEAR, year);
+        c.set(Calendar.MONTH, month);
+        c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+        fridge_date = DateFormat.getDateInstance().format(c.getTime());
+        updateList();
+
+
+        c.set(Calendar.HOUR_OF_DAY, 12);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+
+        startAlarm(c);
+
+    }
+
     public void Add_item_to_fridge(View view) {
 
+        fridge_text = insert_item_name.getText().toString();
+
+        if (fridge_text.isEmpty()) {
+
+            final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+            alert.setTitle("Alert");
+            alert.setMessage("The item name cannot be blank");
 
 
-        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+//            // Set up the buttons
+            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
 
-        LinearLayout lila1= new LinearLayout(this);
-        lila1.setOrientation(LinearLayout.VERTICAL); //1 is for vertical orientation
-
-        final EditText input1 = new EditText(this);
-        final EditText input2 = new EditText(this);
-
-        lila1.addView(input1);
-        lila1.addView(input2);
-        alert.setView(lila1);
-
-        alert.setTitle("Enter the item then the expiry date");
-
-
-
-        // Specify the type of input expected
-        input1.setInputType(InputType.TYPE_CLASS_TEXT);
-        input2.setInputType(InputType.TYPE_CLASS_TEXT);
-
-
-        // Set up the buttons
-        alert.setPositiveButton("Enter", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-                fridge_text = input1.getText().toString().trim();
-                fridge_date = input2.getText().toString().trim();
-
-
-                count = adapter.getItemCount();
-
-                boolean isInserted =  itemDB.insertData(fridge_text, fridge_date);
-
-                if (isInserted)
-                {
-                    Toast.makeText(FridgeActivity.this, "Data added", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(FridgeActivity.this, "Data not added", Toast.LENGTH_LONG).show();
                 }
+            });
 
-                fridgeItemArray.add(fridge_text);
-                fridgeDateArray.add(fridge_date);
+            alert.show();
+        } else {
 
-                adapter.notifyItemInserted(count + 1);
-
-            }
-        });
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        alert.show();
+            datePicker();
 
 
+        }
     }
 
 
     @Override
     public void onItemClick(View view, final int position) {
 
+        final String item = adapter.getItem(position);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Do you wish to remove " + adapter.getItem(position) + " from the fridge?");
+        builder.setTitle(item + " selected");
+        builder.setMessage("Chose an option");
 
         //builder.setView(view);
 
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        builder.setNeutralButton("Add to Shopping List", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                String deletee = adapter.getItem(position);
+                boolean isInserted = listDB.insertData(item);
 
-               Integer deleteRow = itemDB.deleteData(deletee);
+                if (isInserted) {
+                    Toast.makeText(FridgeActivity.this, item +  " added to shopping list", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(FridgeActivity.this, "Data not added", Toast.LENGTH_LONG).show();
+                }
+
+            }
+        });
+
+        builder.setPositiveButton("Remove from fridge", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+
+
+               Integer deleteRow = itemDB.deleteData(item);
                if (deleteRow > 0) {
-                   Toast.makeText(FridgeActivity.this,  deletee + " deleted", Toast.LENGTH_LONG).show();
+                   Toast.makeText(FridgeActivity.this,  item + " deleted", Toast.LENGTH_LONG).show();
                } else {
                    Toast.makeText(FridgeActivity.this, "Data not deleted", Toast.LENGTH_LONG).show();
                }
@@ -149,18 +183,85 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
                 fridgeItemArray.remove(position);
                 fridgeDateArray.remove(position);
                 adapter.notifyItemRemoved(position);
+
+                sendNotification();
+
+
             }
         });
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
+//        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                dialog.cancel();
+//            }
+//        });
+
 
         builder.show();
 
         //Toast.makeText(this, "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
-    
+
+    public void sendNotification() {
+
+        Intent activityIntent = new Intent(this, FridgeActivity.class);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+
+
+        stackBuilder.addNextIntentWithParentStack(activityIntent);
+        PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent broadcastIntent = new Intent(this, NotificationReciever.class);
+        broadcastIntent.putExtra("toastMessage", "Test");
+        PendingIntent actionIntent = PendingIntent.getBroadcast(this, 0, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification notification = new NotificationCompat.Builder(this, App.CHANNEL_1_ID)
+                .setSmallIcon(R.drawable.ic_bell)
+                .setContentTitle("Test")
+                .setContentText("Hello World!")
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .addAction(R.mipmap.ic_launcher, "Add to Shopping List", actionIntent)
+                .build();
+
+        notificationManager.notify(1, notification);
+    }
+
+    public void datePicker() {
+        DialogFragment datePicker = new DatePickerFragment();
+        datePicker.show(getSupportFragmentManager(), "date picker");
+
+
+    }
+
+    public void updateList() {
+
+            count = adapter.getItemCount();
+
+            boolean isInserted = itemDB.insertData(fridge_text, fridge_date);
+
+            if (isInserted) {
+                Toast.makeText(FridgeActivity.this, fridge_text +  " added to fridge with expiry date " + fridge_date, Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(FridgeActivity.this, "Data not added", Toast.LENGTH_LONG).show();
+            }
+
+
+            fridgeItemArray.add(fridge_text);
+            fridgeDateArray.add(fridge_date);
+
+            adapter.notifyItemInserted(count + 1);
+        }
+
+    public void startAlarm(Calendar c) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(this, AlertReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0);
+
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, c.getTimeInMillis(), pendingIntent);
+    }
+
 }
