@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Coursework</string>
     <string name="fridge_button">Fridge</string>
-    <string name="recipe_button">Recipies</string>
+    <string name="recipe_button">Recipes</string>
     <string name="list_button">Shopping List</string>
     <string name="main_title">Fridge App</string>
     <string name="add_item_to_fridge">Add Item</string>
@@ -12,4 +12,6 @@
     <string name="item_date_title">Expiry Date</string>
     <string name="recipie_title">Recipe</string>
     <string name="recipie_name">Insert Recipe Name</string>
+    <string name="ingredient_name">Insert Ingredient</string>
+    <string name="show_recipes">What you can make</string>
 </resources>

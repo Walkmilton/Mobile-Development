@@ -74,6 +74,7 @@ public class FridgeActivity extends AppCompatActivity implements MyRecyclerViewA
                 error.setCancelable(true);
                 error.setTitle("Alert");
                 error.setMessage("The Database is empty");
+                error.show();
 
                 return;
             }

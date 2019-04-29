@@ -54,6 +54,7 @@ public class ListActivity extends AppCompatActivity implements MyRecyclerViewAda
             error.setCancelable(true);
             error.setTitle("Alert");
             error.setMessage("The Database is empty");
+            error.show();
 
             return;
         }
