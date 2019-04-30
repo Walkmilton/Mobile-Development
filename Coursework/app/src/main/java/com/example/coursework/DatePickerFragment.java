@@ -10,8 +10,6 @@ import android.support.v4.app.DialogFragment;
 import java.util.Calendar;
 
 public class DatePickerFragment extends DialogFragment {
-
-   //Setting up date picker
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {

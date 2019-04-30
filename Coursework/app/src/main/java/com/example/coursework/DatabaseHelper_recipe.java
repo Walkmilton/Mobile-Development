@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper_recipe extends SQLiteOpenHelper {
 
-    //Declaring Database Variables
     public static final String DATABASE_NAME = "recipe.db";
     public static final String TABLE_NAME = "recipe_table";
     public static final String COL_1 = "recipe_name";
@@ -18,20 +17,17 @@ public class DatabaseHelper_recipe extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, 1);
     }
 
-    //Creating Table
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("create table " + TABLE_NAME + " (recipe_name text, recipe_ingredient text)");
     }
 
-    //If the table already exists create a new one
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
     }
 
-    //Inserting data to table
     public boolean insertData(String recipeName, String recipeIngredient){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -46,14 +42,12 @@ public class DatabaseHelper_recipe extends SQLiteOpenHelper {
 
     }
 
-    //Retrieving Data
     public Cursor getAllData() {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor res = db.rawQuery("select * from " + TABLE_NAME, null);
         return res;
     }
 
-    //Deleting Data
     public Integer deleteData(String item){
         SQLiteDatabase db = this.getWritableDatabase();
         return db.delete(TABLE_NAME, "recipe_name = ?", new String[] {item});
